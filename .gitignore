@@ -30,6 +30,9 @@ bin/
 ### Mac OS ###
 .DS_Store
 
+### Superpowers ###
+.superpowers/
+
 ### Node.js ###
 node_modules/
 dist/
