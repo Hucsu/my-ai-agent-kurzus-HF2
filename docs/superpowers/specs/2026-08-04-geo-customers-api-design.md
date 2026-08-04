@@ -27,8 +27,8 @@ Egy kis, fókuszált Node.js + Express + TypeScript REST szolgáltatás, amely:
 | Kliens | `pg` (node-postgres) | Direct SQL, nincs ORM-függőség |
 | Migrációk | Raw SQL + egyszerű Node runner | Függőség-mentes, átlátható |
 | Tesztelés | Jest | Standard, TypeScript-barát |
-| Postgres MCP | `crystaldba/postgres-mcp` | Ajánlott community implementáció, biztonságos |
-| Dev adatbázis | Docker Compose (opcionális) vagy lokális Postgres | Könnyű setup |
+| Postgres MCP | `postgres-mcp` (Python, uvx-vel) | Ajánlott community implementáció, biztonságos |
+| Dev adatbázis | Docker Compose (elsődleges) | Könnyű, reprodukálható Postgres setup |
 
 ---
 
@@ -55,12 +55,13 @@ CREATE TABLE customers (
 - `id`: Autoincrement elsődleges kulcs
 - `name`, `telepules`: Composite UNIQUE constraint — egy ügyfélnek lehet azonos neve másik városban
 - `lat`, `lon`: NULL-lehetőek, ha a város nincs a referenciában
-- `budget`, `note`: Opcionális, az seed adatból származnak
+- `budget` (INTEGER): Opcionális, az seed adatból származnak. Típusa INTEGER — a valós seed adatban az értékek 300–1500 közötti egészek
+- `note` (TEXT): Opcionális, az seed adatból származnak
 - Timestamp mezők: audit trail
 
 ### 3.2 Város-Referencia (JSON)
 
-`src/data/cities.json` — bundled a repóban, nem külső API:
+`src/data/cities.json` — bundled a repóban, nem külső API. A város-lista a `seed-customers.json` seed adatból lett kiolvasva (15 ügyfél, 15 város):
 
 ```json
 {
@@ -137,7 +138,10 @@ A seed minden futtatáskor:
 
 ### 5.2 GET /customers/by-distance
 
-**Válasz:**
+**Válasz (15 valós ügyfél — mind ismert koordinátákkal):**
+
+Mind a 15 seed-ügyfél városa megtalálható a `cities.json` referenciában, ezért az összes rendelkezik lat/lon-nal. Példa sorrend (Budapest-ből mért távolság szerinti):
+
 ```json
 [
   {
@@ -147,7 +151,55 @@ A seed minden futtatáskor:
     "lat": 47.4979,
     "lon": 19.0402,
     "budget": 850,
-    "note": "...",
+    "note": "Loves lush, jungle-style rooms...",
+    "distanceKm": 0.0
+  },
+  {
+    "id": 8,
+    "name": "Petra Horáková",
+    "telepules": "Prague",
+    "lat": 50.0755,
+    "lon": 14.4378,
+    "budget": 640,
+    "note": "Wants an air-purifying focus...",
+    "distanceKm": 300.2
+  },
+  {
+    "id": 2,
+    "name": "Lena Fischer",
+    "telepules": "Vienna",
+    "lat": 48.2082,
+    "lon": 16.3738,
+    "budget": 950,
+    "note": "Prefers architectural, sculptural plants...",
+    "distanceKm": 214.3
+  },
+  {
+    "id": 14,
+    "name": "Niamh O'Brien",
+    "telepules": "Dublin",
+    "lat": 53.3498,
+    "lon": -6.2603,
+    "budget": 990,
+    "note": "Classic style for a bright bathroom...",
+    "distanceKm": 2086.5
+  }
+]
+```
+
+**Hipotetikus: Null-Koordináta Kezelés**
+
+Ha a város-referencia hiányos lenne (pl. egy ügyfélhez ismeretlen város), az alábbi válaszstruktúra szemlélteti a null-kezelést:
+
+```json
+[
+  {
+    "id": 1,
+    "name": "Anna Kovács",
+    "telepules": "Budapest",
+    "lat": 47.4979,
+    "lon": 19.0402,
+    "budget": 850,
     "distanceKm": 0.0
   },
   {
@@ -157,41 +209,39 @@ A seed minden futtatáskor:
     "lat": 48.2082,
     "lon": 16.3738,
     "budget": 950,
-    "note": "...",
     "distanceKm": 214.3
   },
   {
-    "id": 10,
-    "name": "Niamh O'Brien",
-    "telepules": "Dublin",
-    "lat": 53.3498,
-    "lon": -6.2603,
-    "budget": 990,
-    "note": "...",
-    "distanceKm": 1234.5
+    "id": 15,
+    "name": "Kristofer Nielsen",
+    "telepules": "Copenhagen",
+    "lat": 55.6761,
+    "lon": 12.5683,
+    "budget": 1300,
+    "distanceKm": 924.7
   },
   {
-    "id": 17,
-    "name": "Unknown City Customer",
-    "telepules": "Unknown City",
-    "lat": null,
-    "lon": null,
-    "budget": 500,
-    "note": "...",
-    "distanceKm": null
-  },
-  {
-    "id": 18,
-    "name": "Zenith Wanderer",
-    "telepules": "Unknown City",
+    "id": 3,
+    "name": "Jonas Weber",
+    "telepules": "UnknownCity",
     "lat": null,
     "lon": null,
     "budget": 300,
-    "note": "...",
+    "distanceKm": null
+  },
+  {
+    "id": 5,
+    "name": "Diego Martín",
+    "telepules": "UnknownCity2",
+    "lat": null,
+    "lon": null,
+    "budget": 720,
     "distanceKm": null
   }
 ]
 ```
+
+**Megjegyzés:** Az utolsó két bejegyzés csak illusztratív — a valós seed adatban az összes város megtalálható a referenciában, így nincsenek null-koordináták. Az egész 15 ügyfél ismert távolságokkal kerül rendezésre.
 
 **Rendezési szabályok:**
 1. **Távolság növekvő sorrendben** (NÖVEKVŐ, nem csökkenő)
@@ -298,7 +348,9 @@ Robusztus város-keresés ellenőrzése:
 
 ### 8.1 Lokális Postgres Setup
 
-**Opció A: Docker Compose**
+**Elsődleges: Docker Compose** (reprodukálható, függőség-nélküli)
+
+`docker-compose.yml`:
 ```yaml
 version: '3.8'
 services:
@@ -317,20 +369,20 @@ volumes:
   postgres_data:
 ```
 
-**Opció B: Lokális Postgres**
-Feltételez telepített Postgres; kapcsolat: `postgresql://postgres:postgres@localhost:5432/customers_db`
+**Alternatív: Lokális Postgres telepítés**
+Ha már van telepített Postgres: `postgresql://postgres:postgres@localhost:5432/customers_db` kapcsolati string.
 
-### 8.2 Postgres MCP Integráció (crystaldba/postgres-mcp)
+### 8.2 Postgres MCP Integráció (postgres-mcp)
 
 Az MCP konfigurációban (`claude_desktop_config.json` vagy `.claude/mcp.json`):
 ```json
 {
   "mcpServers": {
     "postgres": {
-      "command": "npx",
-      "args": ["-y", "crystaldba/postgres-mcp"],
+      "command": "uvx",
+      "args": ["postgres-mcp", "--access-mode=restricted"],
       "env": {
-        "DATABASE_URL": "postgresql://postgres:postgres@localhost:5432/customers_db"
+        "DATABASE_URI": "postgresql://postgres:postgres@localhost:5432/customers_db"
       }
     }
   }
@@ -342,7 +394,7 @@ Ez lehetővé teszi az MCP segítségével:
 - Adatok megtekintése
 - Queryók futtatása fejlesztés közben
 
-**Forrás:** [crystaldba/postgres-mcp](https://github.com/crystaldba/postgres-mcp) — ajánlott community implementáció (az Anthropic referencia deprecated).
+**Megjegyzés:** A `postgres-mcp` egy Python-alapú MCP szerver, amely az ajánlott community implementáció (az Anthropic referencia deprecated).
 
 ### 8.3 Kis, Fókuszált Commitok
 
