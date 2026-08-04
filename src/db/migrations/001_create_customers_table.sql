@@ -1,0 +1,12 @@
+CREATE TABLE customers (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  telepules VARCHAR(255) NOT NULL,
+  lat DECIMAL(9, 6),
+  lon DECIMAL(9, 6),
+  budget INTEGER,
+  note TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(name, telepules)
+);
