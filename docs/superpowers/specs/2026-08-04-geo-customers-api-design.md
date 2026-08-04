@@ -140,7 +140,7 @@ A seed minden futtatáskor:
 
 **Válasz (15 valós ügyfél — mind ismert koordinátákkal):**
 
-Mind a 15 seed-ügyfél városa megtalálható a `cities.json` referenciában, ezért az összes rendelkezik lat/lon-nal. Példa sorrend (Budapest-ből mért távolság szerinti):
+Mind a 15 seed-ügyfél városa megtalálható a `cities.json` referenciában, ezért az összes rendelkezik lat/lon-nal. Példa sorrend (Budapest-ből mért távolság szerinti, növekvő):
 
 ```json
 [
@@ -155,16 +155,6 @@ Mind a 15 seed-ügyfél városa megtalálható a `cities.json` referenciában, e
     "distanceKm": 0.0
   },
   {
-    "id": 8,
-    "name": "Petra Horáková",
-    "telepules": "Prague",
-    "lat": 50.0755,
-    "lon": 14.4378,
-    "budget": 640,
-    "note": "Wants an air-purifying focus...",
-    "distanceKm": 300.2
-  },
-  {
     "id": 2,
     "name": "Lena Fischer",
     "telepules": "Vienna",
@@ -175,6 +165,36 @@ Mind a 15 seed-ügyfél városa megtalálható a `cities.json` referenciában, e
     "distanceKm": 214.3
   },
   {
+    "id": 8,
+    "name": "Petra Horáková",
+    "telepules": "Prague",
+    "lat": 50.0755,
+    "lon": 14.4378,
+    "budget": 640,
+    "note": "Wants an air-purifying focus...",
+    "distanceKm": 300.2
+  },
+  {
+    "id": 12,
+    "name": "Matej Horvat",
+    "telepules": "Ljubljana",
+    "lat": 46.0569,
+    "lon": 14.5058,
+    "budget": 450,
+    "note": "Small starter budget for a cozy studio...",
+    "distanceKm": 305.0
+  },
+  {
+    "id": 3,
+    "name": "Jonas Weber",
+    "telepules": "Munich",
+    "lat": 48.1351,
+    "lon": 11.5820,
+    "budget": 300,
+    "note": "Beginner with a very small budget...",
+    "distanceKm": 350.0
+  },
+  {
     "id": 14,
     "name": "Niamh O'Brien",
     "telepules": "Dublin",
@@ -183,13 +203,23 @@ Mind a 15 seed-ügyfél városa megtalálható a `cities.json` referenciában, e
     "budget": 990,
     "note": "Classic style for a bright bathroom...",
     "distanceKm": 2086.5
+  },
+  {
+    "id": 15,
+    "name": "Kristofer Nielsen",
+    "telepules": "Copenhagen",
+    "lat": 55.6761,
+    "lon": 12.5683,
+    "budget": 1300,
+    "note": "Premium, calm palette for a double-height loft...",
+    "distanceKm": 925.0
   }
 ]
 ```
 
 **Hipotetikus: Null-Koordináta Kezelés**
 
-Ha a város-referencia hiányos lenne (pl. egy ügyfélhez ismeretlen város), az alábbi válaszstruktúra szemlélteti a null-kezelést:
+Ha a város-referencia hiányos lenne (pl. egyes ügyfelek városai ismeretlenek), az alábbi válaszstruktúra szemlélteti a null-kezelést. Az ismert távolságú ügyfelek növekvő sorrendben, majd a null-koordinátások az utolsó helyeken, **név szerinti ABC-sorrendben**:
 
 ```json
 [
@@ -218,30 +248,30 @@ Ha a város-referencia hiányos lenne (pl. egy ügyfélhez ismeretlen város), a
     "lat": 55.6761,
     "lon": 12.5683,
     "budget": 1300,
-    "distanceKm": 924.7
-  },
-  {
-    "id": 3,
-    "name": "Jonas Weber",
-    "telepules": "UnknownCity",
-    "lat": null,
-    "lon": null,
-    "budget": 300,
-    "distanceKm": null
+    "distanceKm": 925.0
   },
   {
     "id": 5,
     "name": "Diego Martín",
-    "telepules": "UnknownCity2",
+    "telepules": "UnknownCity",
     "lat": null,
     "lon": null,
     "budget": 720,
+    "distanceKm": null
+  },
+  {
+    "id": 3,
+    "name": "Jonas Weber",
+    "telepules": "AnotherUnknownCity",
+    "lat": null,
+    "lon": null,
+    "budget": 300,
     "distanceKm": null
   }
 ]
 ```
 
-**Megjegyzés:** Az utolsó két bejegyzés csak illusztratív — a valós seed adatban az összes város megtalálható a referenciában, így nincsenek null-koordináták. Az egész 15 ügyfél ismert távolságokkal kerül rendezésre.
+**Megjegyzés:** Az utolsó két bejegyzés csak illusztratív — a valós seed adatban az összes város megtalálható a referenciában, így nincsenek null-koordináták. Az egész 15 ügyfél ismert távolságokkal kerül rendezésre. A null-koordinátások név szerinti sorrendben (Diego < Jonas) kerülnek a lista végére.
 
 **Rendezési szabályok:**
 1. **Távolság növekvő sorrendben** (NÖVEKVŐ, nem csökkenő)
