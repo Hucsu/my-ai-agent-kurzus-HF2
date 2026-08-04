@@ -29,3 +29,11 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### Node.js ###
+node_modules/
+dist/
+.env
+.env.local
+*.log
+coverage/
